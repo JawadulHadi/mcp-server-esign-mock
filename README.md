@@ -10,6 +10,39 @@ Agent (Claude Desktop, Cursor, ...) --MCP/stdio--> esign-mcp
   send_envelope, cancel_envelope                     (human approval required)
 ```
 
+## Architecture
+
+```mermaid
+flowchart TD
+    Agent["MCP client<br/>Claude Desktop, Cursor, Inspector"] -- "MCP over stdio (logs go to stderr)" --> Server["createServer() · server.ts<br/>zod-validated inputs<br/>StoreError returned as a tool error, server keeps running"]
+
+    Server --> Safe["Safe, no approval<br/>list_templates (read-only)<br/>create_envelope (draft only, 1 to 5 signers)<br/>get_status (read-only)"]
+    Server --> Risky["Destructive, approval required<br/>send_envelope<br/>cancel_envelope"]
+    Server -.-> Dev["simulate_signing<br/>only if ESIGN_DEV_TOOLS=1"]
+
+    Risky --> Elicit
+
+    subgraph Gate["requireApproval() · the human gate"]
+        Elicit{"Client supports<br/>elicitation?"}
+        Elicit -- "yes" --> Ask["elicitInput() asks the human<br/>accept + confirm=true: approved<br/>anything else: declined (fail closed)"]
+        Elicit -- "no" --> Mode{"ESIGN_FALLBACK"}
+        Mode -- "deny" --> Blocked["Blocked"]
+        Mode -- "code (default)" --> Code["Single-use code, 5 min TTL<br/>model must show the human<br/>and call again with it"]
+    end
+
+    Human(("Human")) <-. "question goes straight to the person;<br/>the model never sees the answer" .-> Ask
+
+    subgraph Store["EsignStore · store.ts (in memory)"]
+        Env["Envelopes<br/>draft → sent → completed<br/>draft or sent → cancelled"]
+        Caps["Caps: 100 envelopes,<br/>5 sends per process"]
+    end
+
+    Safe --> Store
+    Dev --> Store
+    Ask -- "approved" --> Store
+    Code -- "valid code" --> Store
+```
+
 ## Tools
 
 | Tool | Effect | Hints | Approval |
@@ -64,6 +97,17 @@ Inspect it interactively: `npx @modelcontextprotocol/inspector node dist/server.
 
 18 tests pass, and the built binary was started over stdio and answered `tools/list` and a tool call.
 It has not been connected to Claude Desktop in this environment.
+
+## Install (free, no hosting)
+
+An MCP stdio server runs on the user's machine, launched by the client, so there is no server to host.
+Point Claude Desktop at it straight from GitHub (the `prepare` script builds it on install):
+
+```json
+{ "mcpServers": { "esign-mock": {
+  "command": "npx", "args": ["-y", "github:JawadulHadi/mcp-server-esign-mock"],
+  "env": { "ESIGN_FALLBACK": "deny" } } } }
+```
 
 ## Known limits
 
