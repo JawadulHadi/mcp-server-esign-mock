@@ -115,4 +115,14 @@ Point Claude Desktop at it straight from GitHub (the `prepare` script builds it 
 - No authentication, since stdio servers run as the user. Add OAuth before exposing over HTTP.
 - Mock only: no emails are sent and no documents are signed.
 
+## Changelog and contributing
+
+Every change adds an entry under **Unreleased** in [`CHANGELOG.md`](CHANGELOG.md) and updates this
+README when the API, behaviour or limits change. A CI job fails any pull request that skips the
+changelog (label it `skip-changelog` for changes that truly need none). Before opening a PR:
+
+```bash
+npm run typecheck && npm test && npm run build
+```
+
 See `NOTES.md` for mistakes made and fixed.
