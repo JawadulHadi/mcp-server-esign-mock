@@ -13,6 +13,9 @@ Every change adds an entry under **Unreleased** in the same pull request. CI che
   which doesn't update the changelog. Label a PR `skip-changelog` to bypass it.
 - README "Changelog and contributing" section.
 
+### Security
+- The `changelog` CI workflow now limits its token to read-only repository access.
+
 ## PR #2 (2026-10-12)
 
 ### Added
