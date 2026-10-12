@@ -23,7 +23,7 @@ Every change adds an entry under **Unreleased** in the same pull request. CI che
 ### Added
 - Architecture diagram in the README, install-from-GitHub instructions for Claude Desktop, MIT license, and CI (typecheck, tests, build).
 
-## Initial commit (2026-10-11)
+## Initial commit (2026-10-12)
 
 ### Added
 - MCP server for a mock e-signature workflow over stdio: template, envelope and status tools, an
